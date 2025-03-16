@@ -127,7 +127,7 @@ jobs:
 
   all_passed:
     runs-on: ubuntu-latest
-    needs: [feature_set, format, msrv, rust-clippy-analyze]
+    needs: [feature_set, format, msrv, rust-clippy-analyze, test]
     steps:
       - name: All passed
         run: echo "All tests passed"
