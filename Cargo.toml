@@ -1,0 +1,38 @@
+[package]
+name = "socketioxide-emitter"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+
+[dependencies]
+rmp-serde = "1"
+rmp = "0.8"
+serde = "1"
+socketioxide-core = "0.16"
+
+socketioxide-parser-common = { version = "0.16", optional = true }
+socketioxide-parser-msgpack = { version = "0.16", optional = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+redis = { version = "0.28", features = ["aio", "tokio-comp", "streams"] }
+fred = { version = "10", features = ["subscriber-client", "i-pubsub"] }
+socketioxide = { version = "0.16", features = ["__test_harness"] }
+socketioxide-redis = { version = "0.2", default-features = false }
+
+[features]
+default = ["common-parser"]
+msgpack-parser = ["dep:socketioxide-parser-msgpack"]
+common-parser = ["dep:socketioxide-parser-common"]
+
+[[example]]
+name = "redis"
+path = "examples/redis.rs"
+
+[[example]]
+name = "redis_msgpack"
+path = "examples/redis_msgpack.rs"
+
+[[example]]
+name = "fred"
+path = "examples/fred.rs"
