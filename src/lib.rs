@@ -4,7 +4,6 @@
 use std::fmt;
 
 use requests::{Request, RequestType};
-use serde::Serialize;
 use socketioxide_core::{
     Str,
     adapter::{BroadcastFlags, BroadcastOptions, RoomParam},
@@ -27,6 +26,7 @@ impl<D: Driver> fmt::Debug for EmitError<D> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             EmitError::Driver(err) => write!(f, "Driver error: {}", err),
+            #[cfg(any(feature = "common-parser", feature = "msgpack-parser"))]
             EmitError::Parser(err) => write!(f, "Serialization error: {}", err),
         }
     }
@@ -39,13 +39,25 @@ impl<D: Driver> fmt::Display for EmitError<D> {
 impl<D: Driver> std::error::Error for EmitError<D> {}
 
 #[cfg(any(feature = "common-parser", feature = "msgpack-parser"))]
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy)]
 enum Parser {
     #[cfg(feature = "common-parser")]
-    #[default]
     Common,
     #[cfg(feature = "msgpack-parser")]
     MsgPack,
+}
+#[cfg(any(feature = "common-parser", feature = "msgpack-parser"))]
+impl Default for Parser {
+    fn default() -> Self {
+        #[cfg(all(feature = "msgpack-parser", not(feature = "common-parser")))]
+        {
+            Parser::MsgPack
+        }
+        #[cfg(feature = "common-parser")]
+        {
+            Parser::Common
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -64,7 +76,7 @@ impl Default for IoEmitter {
             ns: None,
             prefix: None,
             #[cfg(any(feature = "common-parser", feature = "msgpack-parser"))]
-            parser: Parser::Common,
+            parser: Parser::default(),
         };
         io.opts.add_flag(BroadcastFlags::Broadcast);
         io
@@ -123,7 +135,7 @@ impl IoEmitter {
     }
 
     #[cfg(any(feature = "msgpack-parser", feature = "common-parser"))]
-    pub async fn emit<D: Driver, T: Serialize + ?Sized>(
+    pub async fn emit<D: Driver, T: serde::Serialize + ?Sized>(
         self,
         event: &str,
         msg: &T,

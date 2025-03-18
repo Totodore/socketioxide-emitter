@@ -13,6 +13,7 @@ use socketioxide_core::{
 #[derive(Debug, PartialEq)]
 pub enum RequestType {
     /// Broadcast a packet to matching sockets.
+    #[allow(unused)]
     Broadcast(Packet),
     /// Disconnect matching sockets.
     DisconnectSockets,
