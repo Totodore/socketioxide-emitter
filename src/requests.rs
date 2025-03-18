@@ -42,8 +42,8 @@ pub struct Request {
 impl Request {
     pub fn new(r#type: RequestType, opts: BroadcastOptions) -> Self {
         Self {
-            node_id: Uid::ZERO,
-            id: Sid::ZERO,
+            node_id: Uid::new(),
+            id: Sid::new(),
             r#type,
             opts,
         }
