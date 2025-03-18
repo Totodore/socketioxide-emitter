@@ -1,19 +1,14 @@
-use socketioxide::{adapter::Adapter, extract::SocketRef};
+use socketioxide::extract::SocketRef;
+use socketioxide_emitter::IoEmitter;
 
 mod fixture;
 
 #[tokio::test]
 pub async fn broadcast() {
-    async fn handler<A: Adapter>(socket: SocketRef<A>) {
-        // delay to ensure all socket/servers are connected
-        tokio::time::sleep(tokio::time::Duration::from_millis(1)).await;
-        socket.broadcast().emit("test", &2).await.unwrap();
-    }
-
     let ([io1, io2], emitter) = fixture::spawn_servers();
 
-    io1.ns("/", handler).await.unwrap();
-    io2.ns("/", handler).await.unwrap();
+    io1.ns("/", || ()).await.unwrap();
+    io2.ns("/", || ()).await.unwrap();
 
     let ((_tx1, mut rx1), (_tx2, mut rx2)) =
         tokio::join!(io1.new_dummy_sock("/", ()), io2.new_dummy_sock("/", ()));
@@ -21,6 +16,7 @@ pub async fn broadcast() {
     timeout_rcv!(&mut rx1); // Connect "/" packet
     timeout_rcv!(&mut rx2); // Connect "/" packet
 
+    IoEmitter::new().emit("test", &2, &emitter).await.unwrap();
     assert_eq!(timeout_rcv!(&mut rx1), r#"42["test",2]"#);
     assert_eq!(timeout_rcv!(&mut rx2), r#"42["test",2]"#);
 
@@ -31,18 +27,16 @@ pub async fn broadcast() {
 #[tokio::test]
 pub async fn broadcast_rooms() {
     let ([io1, io2, io3], emitter) = fixture::spawn_servers();
-    let handler = |room: &'static str, to: &'static str| {
+    let handler = |rooms: &'static [&'static str]| {
         move |socket: SocketRef<_>| async move {
             // delay to ensure all socket/servers are connected
-            socket.join(room);
-            tokio::time::sleep(tokio::time::Duration::from_millis(5)).await;
-            socket.to(to).emit("test", room).await.unwrap();
+            socket.join(rooms);
         }
     };
 
-    io1.ns("/", handler("room1", "room2")).await.unwrap();
-    io2.ns("/", handler("room2", "room3")).await.unwrap();
-    io3.ns("/", handler("room3", "room1")).await.unwrap();
+    io1.ns("/", handler(&["room1", "room4"])).await.unwrap();
+    io2.ns("/", handler(&["room2", "room4"])).await.unwrap();
+    io3.ns("/", handler(&["room3", "room4"])).await.unwrap();
 
     let ((_tx1, mut rx1), (_tx2, mut rx2), (_tx3, mut rx3)) = tokio::join!(
         io1.new_dummy_sock("/", ()),
@@ -54,12 +48,39 @@ pub async fn broadcast_rooms() {
     timeout_rcv!(&mut rx2); // Connect "/" packet
     timeout_rcv!(&mut rx3); // Connect "/" packet
 
-    // socket 1 is receiving a packet from io3
-    assert_eq!(timeout_rcv!(&mut rx1), r#"42["test","room3"]"#);
-    // socket 2 is receiving a packet from io2
-    assert_eq!(timeout_rcv!(&mut rx2), r#"42["test","room1"]"#);
-    // socket 3 is receiving a packet from io1
-    assert_eq!(timeout_rcv!(&mut rx3), r#"42["test","room2"]"#);
+    let emit_room = async |rooms: &'static [&'static str]| {
+        IoEmitter::new()
+            .to(rooms)
+            .emit("test", rooms, &emitter)
+            .await
+            .unwrap()
+    };
+
+    emit_room(&["room1"]).await;
+    assert_eq!(timeout_rcv!(&mut rx1), r#"42["test",["room1"]]"#);
+    emit_room(&["room2"]).await;
+    assert_eq!(timeout_rcv!(&mut rx2), r#"42["test",["room2"]]"#);
+    emit_room(&["room3"]).await;
+    assert_eq!(timeout_rcv!(&mut rx3), r#"42["test",["room3"]]"#);
+
+    IoEmitter::new()
+        .to("room4")
+        .except("room3")
+        .emit("test", "chippons froutés", &emitter)
+        .await
+        .unwrap();
+    assert_eq!(timeout_rcv!(&mut rx1), r#"42["test","chippons froutés"]"#);
+    assert_eq!(timeout_rcv!(&mut rx2), r#"42["test","chippons froutés"]"#);
+
+    IoEmitter::new()
+        .within("room4")
+        .emit("test", "Barnabouche", &emitter)
+        .await
+        .unwrap();
+
+    assert_eq!(timeout_rcv!(&mut rx1), r#"42["test","Barnabouche"]"#);
+    assert_eq!(timeout_rcv!(&mut rx2), r#"42["test","Barnabouche"]"#);
+    assert_eq!(timeout_rcv!(&mut rx3), r#"42["test","Barnabouche"]"#);
 
     timeout_rcv_err!(&mut rx1);
     timeout_rcv_err!(&mut rx2);

@@ -1,4 +1,5 @@
 use socketioxide::extract::SocketRef;
+use socketioxide_emitter::IoEmitter;
 mod fixture;
 
 #[tokio::test]
@@ -14,7 +15,10 @@ pub async fn add_sockets() {
 
     timeout_rcv!(&mut rx1); // Connect "/" packet
     timeout_rcv!(&mut rx2); // Connect "/" packet
-    io1.broadcast().join("room2").await.unwrap();
+
+    IoEmitter::new().join("room2", &emitter).await.unwrap();
+    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+
     let mut rooms = io1.rooms().await.unwrap();
     rooms.sort();
     assert_eq!(rooms, ["room1", "room2", "room3"]);
@@ -37,7 +41,8 @@ pub async fn del_sockets() {
     timeout_rcv!(&mut rx1); // Connect "/" packet
     timeout_rcv!(&mut rx2); // Connect "/" packet
 
-    io1.broadcast().leave("room2").await.unwrap();
+    IoEmitter::new().leave("room2", &emitter).await.unwrap();
+    tokio::time::sleep(std::time::Duration::from_millis(10)).await;
 
     let mut rooms = io1.rooms().await.unwrap();
     rooms.sort();

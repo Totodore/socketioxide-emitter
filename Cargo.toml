@@ -17,8 +17,9 @@ socketioxide-parser-msgpack = { version = "0.16", optional = true }
 tokio = { version = "1", features = ["full"] }
 redis = { version = "0.28", features = ["aio", "tokio-comp", "streams"] }
 fred = { version = "10", features = ["subscriber-client", "i-pubsub"] }
-socketioxide = { version = "0.16", features = ["__test_harness"] }
+socketioxide = { version = "0.16", features = ["__test_harness", "tracing"] }
 socketioxide-redis = { version = "0.2", default-features = false }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [features]
 default = ["common-parser"]
@@ -28,11 +29,14 @@ common-parser = ["dep:socketioxide-parser-common"]
 [[example]]
 name = "redis"
 path = "examples/redis.rs"
+required-features = ["common-parser"]
 
 [[example]]
 name = "redis_msgpack"
 path = "examples/redis_msgpack.rs"
+required-features = ["msgpack-parser"]
 
 [[example]]
 name = "fred"
 path = "examples/fred.rs"
+required-features = ["common-parser"]

@@ -57,6 +57,7 @@ pub fn spawn_servers<const N: usize>() -> (
     let sync_buff = sync_buff.clone();
     tokio::spawn(async move {
         while let Some((chan, data)) = rx.recv().await {
+            dbg!(&chan);
             for tx in sync_buff.read().unwrap().iter() {
                 tx.try_send((chan.clone(), data.clone())).unwrap();
             }
