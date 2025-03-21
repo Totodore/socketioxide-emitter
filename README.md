@@ -76,7 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Use a namespace
     let nsp = IoEmitter::new().of("/admin");
-    nsp.clone().emit("event", "message", &conn).await?;
+    nsp.emit("event", "message", &conn).await?;
 
     // MessagePack encoding
     let msgpack = IoEmitter::new_msgpack();
