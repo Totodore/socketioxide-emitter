@@ -39,3 +39,8 @@ required-features = ["msgpack-parser"]
 name = "fred"
 path = "examples/fred.rs"
 required-features = ["common-parser"]
+
+# docs.rs-specific configuration
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
