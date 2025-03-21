@@ -3,6 +3,19 @@ name = "socketioxide-emitter"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
+description = "Broadcast events across a Socketioxide cluster from any Rust process"
+authors = ["Théodore Prévot <"]
+repository = "https://github.com/Totodore/socketioxide-emitter"
+homepage = "https://github.com/Totodore/socketioxide-emitter"
+keywords = ["socketioxide", "redis", "emitter"]
+readme = "README.md"
+categories = [
+    "asynchronous",
+    "network-programming",
+    "web-programming::websocket",
+]
+license = "MIT"
+
 
 [dependencies]
 rmp-serde = "1"
