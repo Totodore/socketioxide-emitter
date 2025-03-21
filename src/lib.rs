@@ -214,7 +214,7 @@ impl IoEmitter {
     }
     /// Sets the namespace for this [`IoEmitter`]. By default, the namespace is set to `/`.
     pub fn of(mut self, ns: impl Into<Str>) -> IoEmitter {
-        self.ns = Str::from(ns.into());
+        self.ns = ns.into();
         self
     }
     /// Sets the rooms for this [`IoEmitter`]. By default, events are sent to all rooms.
