@@ -39,25 +39,17 @@ impl<D: Driver> fmt::Display for EmitError<D> {
 impl<D: Driver> std::error::Error for EmitError<D> {}
 
 #[cfg(any(feature = "common-parser", feature = "msgpack-parser"))]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 enum Parser {
     #[cfg(feature = "common-parser")]
+    #[cfg_attr(feature = "common-parser", default)]
     Common,
     #[cfg(feature = "msgpack-parser")]
+    #[cfg_attr(
+        all(feature = "msgpack-parser", not(feature = "common-parser")),
+        default
+    )]
     MsgPack,
-}
-#[cfg(any(feature = "common-parser", feature = "msgpack-parser"))]
-impl Default for Parser {
-    fn default() -> Self {
-        #[cfg(all(feature = "msgpack-parser", not(feature = "common-parser")))]
-        {
-            Parser::MsgPack
-        }
-        #[cfg(feature = "common-parser")]
-        {
-            Parser::Common
-        }
-    }
 }
 
 #[derive(Clone, Debug)]

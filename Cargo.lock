@@ -1210,7 +1210,6 @@ version = "0.1.0"
 dependencies = [
  "fred",
  "redis",
- "rmp",
  "rmp-serde",
  "serde",
  "socketioxide",

@@ -6,7 +6,6 @@ rust-version = "1.85"
 
 [dependencies]
 rmp-serde = "1"
-rmp = "0.8"
 serde = "1"
 socketioxide-core = "0.16"
 
