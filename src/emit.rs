@@ -2,7 +2,7 @@ use std::fmt;
 
 use crate::Driver;
 
-/// An error that occurred when broadcasting messages.
+/// An error that occurs when broadcasting messages.
 pub enum EmitError<D: Driver> {
     /// The underlying driver error.
     Driver(D::Error),
@@ -25,7 +25,7 @@ impl<D: Driver> fmt::Display for EmitError<D> {
 impl<D: Driver> std::error::Error for EmitError<D> {}
 
 /// The available socket.io parsers when encoding messages.
-/// Make sure that all your socket.io systems use the same parser.
+/// Ensure that all your socket.io systems use the same parser.
 #[derive(Debug, Clone, Copy, Default)]
 pub enum Parser {
     /// Specify the [common socket.io parser](https://docs.rs/socketioxide-parser-common/latest/socketioxide_parser_common/).
@@ -34,7 +34,7 @@ pub enum Parser {
     #[cfg_attr(feature = "common-parser", default)]
     Common,
     /// Specify the [msgpack socket.io parser](https://docs.rs/socketioxide-parser-msgpack/latest/socketioxide_parser_msgpack/).
-    /// If you want to use it, make sure that all your socket.io systems use the msgpack-parser.
+    /// If you choose to use this parser, ensure that all your socket.io systems support msgpack.
     #[cfg(feature = "msgpack-parser")]
     #[cfg_attr(
         all(feature = "msgpack-parser", not(feature = "common-parser")),

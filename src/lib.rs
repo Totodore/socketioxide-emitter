@@ -35,15 +35,14 @@
     nonstandard_style,
     missing_docs
 )]
-//! Socketioxide Emitter
-//!
-//! You can use this crate to emit events and manipulate sockets on a cluster of socketioxide servers through Redis.
+//! The Socketioxide Emitter crate allows you to easily communicate with a group of Socket.IO servers
+//! from another rust process (server-side). It must be used in conjunction with [socketioxide-redis](https://docs.rs/socketioxide-redis).
 //!
 //! <div class="warning">
 //!     Socketioxide Emitter is not compatible with <code>@socketio/redis-adapter</code>
 //!     and <code>@socketio/redis-emitter</code>. They use completely different protocols and
 //!     cannot be used together. Do not mix socket.io JS servers with socketioxide rust servers.
-//!     If you are looking for a way to emit events to a cluster of socket.io servers in rust,
+//!     If you are looking for a way to emit events to a cluster of node socket.io servers in rust,
 //!     you should use the <a href="https://github.com/epli2/socketio-rust-emitter">socketio-rust-emitter</a> package.
 //! </div>
 //!
@@ -52,7 +51,7 @@
 //!
 //! # Features and parsers
 //! The emitter supports two parsers: Common and MessagePack. You can enable/disable them with the `parser-common`
-//! and `parser-msgpack` feature flags. If you disable every features, you won't be able to emit events.
+//! and `parser-msgpack` feature flags. If you disable all features, you won't be able to emit events.
 //! It will be only possible to manipulate sockets (join/leave rooms, disconnect).
 //!
 //! # Emit cheat sheet (example with redis)
@@ -127,7 +126,7 @@ pub use emit::EmitError;
 /// [`Adapter`](https://docs.rs/socketioxide/latest/socketioxide/#adapters) driver.
 ///
 /// For a redis emitter you would implement the driver trait to emit events to a pubsub channel.
-/// The only requirement is that the driver must be able to emit data to given channels.
+/// The only requirement is that the driver must be able to emit data to specified channels.
 ///
 /// # Example with the [redis](https://docs.rs/redis) crate
 /// ```
@@ -213,12 +212,12 @@ impl IoEmitter {
             ..Default::default()
         }
     }
-    /// Sets the namespace for this [`IoEmitter`]. By default, the namespace is `/`.
+    /// Sets the namespace for this [`IoEmitter`]. By default, the namespace is set to `/`.
     pub fn of(mut self, ns: impl Into<Str>) -> IoEmitter {
         self.ns = Str::from(ns.into());
         self
     }
-    /// Sets the rooms for this [`IoEmitter`]. By default, all rooms are included.
+    /// Sets the rooms for this [`IoEmitter`]. By default, events are sent to all rooms.
     pub fn to(mut self, rooms: impl RoomParam) -> IoEmitter {
         self.opts.rooms.extend(rooms.into_room_iter());
         self
@@ -227,13 +226,13 @@ impl IoEmitter {
     pub fn within(self, rooms: impl RoomParam) -> IoEmitter {
         self.to(rooms)
     }
-    /// Filters out the specified rooms.
+    /// Excludes the specified rooms.
     pub fn except(mut self, rooms: impl RoomParam) -> IoEmitter {
         self.opts.except.extend(rooms.into_room_iter());
         self
     }
     /// You may have set a custom prefix on your adapter config,
-    /// which will be used to prefix the channel name.
+    /// which will be used as a prefix for the channel name.
     /// By default, the prefix is `socket.io`.
     pub fn prefix(mut self, prefix: impl Into<String>) -> IoEmitter {
         self.prefix = Some(prefix.into());
@@ -276,7 +275,7 @@ impl IoEmitter {
         let data = serialize(self.opts, RequestType::DelSockets(rooms));
         driver.emit(chan, data).await
     }
-    /// Makes the selected sockets disconnect from their namespace.
+    /// Disconnects the selected sockets from their namespace.
     ///
     /// ```ignore
     /// // Makes the sockets in the root namespace and in the room1 and room2, disconnect.
@@ -340,7 +339,7 @@ impl IoEmitter {
 
 impl IoEmitter {
     /// The request channel used to broadcast requests to all the servers.
-    /// format: `{prefix}-request#{path}#`.
+    /// Format: `{prefix}-request#{path}#`.
     fn get_channel(&self) -> String {
         let prefix = self.prefix.as_deref().unwrap_or("socket.io");
         format!("{}-request#{}#", prefix, &self.ns)
